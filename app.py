@@ -7,16 +7,11 @@ import telebot
 from telebot import types
 import firebase_admin
 from firebase_admin import credentials, firestore
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
 
 # --- Configuración ---
 TOKEN = os.environ['TELEGRAM_TOKEN']
 GOOGLE_CLIENT_ID = os.environ['GOOGLE_CLIENT_ID']
 GOOGLE_CLIENT_SECRET = os.environ['GOOGLE_CLIENT_SECRET']
-FIREBASE_CREDENTIALS_JSON = os.environ['FIREBASE_CREDENTIALS_JSON']
 
 # Inicializar Firebase desde archivo
 cred = credentials.Certificate('firebase-credentials.json')
@@ -39,23 +34,6 @@ def log_audit(usuario, correo, permitido, mensaje):
         'mensaje': mensaje,
         'fecha': datetime.now(timezone.utc)
     })
-
-def get_gmail_service():
-    creds = Credentials(
-        None,
-        refresh_token=None,
-        token_uri='https://oauth2.googleapis.com/token',
-        client_id=GOOGLE_CLIENT_ID,
-        client_secret=GOOGLE_CLIENT_SECRET
-    )
-    # En producción, usarías un refresh token. Para pruebas, usamos credenciales OAuth directas.
-    # Pero como usamos cuenta personal, haremos login manual la primera vez.
-    # Por simplicidad, en este ejemplo asumimos que ya tienes acceso.
-    # NOTA: Este bot está diseñado para correr en un entorno donde ya se ha hecho OAuth.
-    # Para uso real, necesitarías un flujo OAuth web. Pero para tu caso (solo tú accedes),
-    # puedes generar un token de acceso manualmente una vez.
-    # Por ahora, este código es un esqueleto funcional.
-    return build('gmail', 'v1', credentials=creds)
 
 # --- Comandos del bot ---
 @bot.message_handler(commands=['start'])
@@ -113,18 +91,9 @@ def get_email(message):
             return
         email = parts[1].lower()
 
-        # Verificar que sea del dominio correcto
         if not email.endswith('@muriarq.com'):
             bot.reply_to(message, "❌ Solo se permiten correos de @muriarq.com")
             return
-
-        # Obtener usuario desde el contexto (en producción, usarías sesión)
-        # Aquí asumimos que el último login fue exitoso (simplificación)
-        # En una versión avanzada, guardarías el estado en Firestore.
-        # Por ahora, pedimos que el usuario se loguee cada vez o use /login primero.
-        # Para este MVP, asumimos que el mensaje viene de un usuario autenticado.
-        # Pero para mayor seguridad, deberías implementar sesión.
-        # Dado que es uso interno, lo dejamos así.
 
         # Buscar en Firestore quién tiene permiso para este correo
         users = db.collection('usuarios').where('correos_autorizados', 'array_contains', email).where('activo', '==', True).stream()
@@ -135,13 +104,6 @@ def get_email(message):
             bot.reply_to(message, "❌ Este correo no está asignado a ningún usuario autorizado.")
             return
 
-        # Aquí normalmente verificarías quién es el usuario actual.
-        # Como no tenemos sesión, este bot está diseñado para que **solo tú lo uses**.
-        # Así que asumimos que si llegaste aquí, tienes permiso.
-        # En producción, esto se haría con autenticación persistente.
-
-        # Simular búsqueda en Gmail (en realidad, necesitas OAuth completo)
-        # Por ahora, solo respondemos que se buscará.
         log_audit("daniel", email, True, "Consulta simulada (pendiente integración Gmail)")
         bot.reply_to(message, f"🔍 Buscando correos relacionados con `{email}` en tu bandeja...\n\n*(Nota: La integración completa con Gmail requiere un paso adicional de autorización OAuth. Te guiaré después.)*", parse_mode="Markdown")
 
@@ -151,14 +113,13 @@ def get_email(message):
 
 # --- Webhook para Render ---
 WEBHOOK_PATH = '/webhook'
-WEBHOOK_URL = f"https://muriarq-mail-bot-1.onrender.com{WEBHOOK_PATH}"
+WEBHOOK_URL = 'https://muriarq-mail-bot-1.onrender.com/webhook'
 
 @app.route(WEBHOOK_PATH, methods=['POST'])
 def webhook():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
     return "OK", 200
 
-# Endpoint para establecer el webhook (solo para depuración)
 @app.route('/setwebhook', methods=['GET'])
 def set_webhook():
     bot.remove_webhook()
