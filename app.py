@@ -47,6 +47,7 @@ def login(message):
         if len(parts) != 3:
             bot.reply_to(message, "❌ Uso: `/login usuario contraseña`", parse_mode="Markdown")
             return
+
         user_input = parts[1]
         pass_input = parts[2]
 
@@ -61,7 +62,10 @@ def login(message):
             bot.reply_to(message, "❌ Usuario desactivado.")
             return
 
-        if hash_password(pass_input) != data.get('contrasena_hash', ''):
+        stored_hash = data.get('contrasena_hash', '')
+        input_hash = hash_password(pass_input)
+
+        if input_hash != stored_hash:
             intentos = data.get('intentos_fallidos', 0) + 1
             user_ref.update({'intentos_fallidos': intentos})
             if intentos >= 3:
@@ -95,7 +99,6 @@ def get_email(message):
             bot.reply_to(message, "❌ Solo se permiten correos de @muriarq.com")
             return
 
-        # Buscar en Firestore quién tiene permiso para este correo
         users = db.collection('usuarios').where('correos_autorizados', 'array_contains', email).where('activo', '==', True).stream()
         allowed_users = [u.id for u in users]
 
