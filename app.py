@@ -18,10 +18,8 @@ GOOGLE_CLIENT_ID = os.environ['GOOGLE_CLIENT_ID']
 GOOGLE_CLIENT_SECRET = os.environ['GOOGLE_CLIENT_SECRET']
 FIREBASE_CREDENTIALS_JSON = os.environ['FIREBASE_CREDENTIALS_JSON']
 
-# Inicializar Firebase
-import json
-cred_dict = json.loads(FIREBASE_CREDENTIALS_JSON)
-cred = credentials.Certificate(cred_dict)
+# Inicializar Firebase desde archivo
+cred = credentials.Certificate('firebase-credentials.json')
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
