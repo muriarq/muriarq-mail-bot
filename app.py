@@ -120,15 +120,15 @@ def webhook():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
     return "OK", 200
 
-@app.route('/setwebhook', methods=['GET'])
-def set_webhook():
-    bot.remove_webhook()
-    bot.set_webhook(url=WEBHOOK_URL)
-    return f"Webhook establecido en {WEBHOOK_URL}", 200
-
 @app.route('/')
 def index():
     return "Bot de Muriarq activo."
 
 if __name__ == '__main__':
+    # Establecer webhook automáticamente al iniciar
+    bot.remove_webhook()
+    bot.set_webhook(url=WEBHOOK_URL)
+    print(f"✅ Webhook configurado en: {WEBHOOK_URL}")
+    
+    # Iniciar servidor Flask
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
