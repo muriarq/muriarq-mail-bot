@@ -150,10 +150,20 @@ def get_email(message):
         bot.reply_to(message, "⚠️ Error al procesar la solicitud.")
 
 # --- Webhook para Render ---
-@app.route('/' + TOKEN, methods=['POST'])
+WEBHOOK_PATH = '/webhook'
+WEBHOOK_URL = f"https://muriarq-mail-bot-1.onrender.com{WEBHOOK_PATH}"
+
+@app.route(WEBHOOK_PATH, methods=['POST'])
 def webhook():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
     return "OK", 200
+
+# Endpoint para establecer el webhook (solo para depuración)
+@app.route('/setwebhook', methods=['GET'])
+def set_webhook():
+    bot.remove_webhook()
+    bot.set_webhook(url=WEBHOOK_URL)
+    return f"Webhook establecido en {WEBHOOK_URL}", 200
 
 @app.route('/')
 def index():
