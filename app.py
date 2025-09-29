@@ -112,10 +112,7 @@ def get_email(message):
         bot.reply_to(message, "⚠️ Error al procesar la solicitud.")
 
 # --- Webhook para Render ---
-WEBHOOK_PATH = '/webhook'
-WEBHOOK_URL = 'https://muriarq-mail-bot-1.onrender.com/webhook'
-
-@app.route(WEBHOOK_PATH, methods=['POST'])
+@app.route('/' + TOKEN, methods=['POST'])
 def webhook():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
     return "OK", 200
@@ -125,10 +122,5 @@ def index():
     return "Bot de Muriarq activo."
 
 if __name__ == '__main__':
-    # Establecer webhook automáticamente al iniciar
-    bot.remove_webhook()
-    bot.set_webhook(url=WEBHOOK_URL)
-    print(f"✅ Webhook configurado en: {WEBHOOK_URL}")
-    
-    # Iniciar servidor Flask
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
