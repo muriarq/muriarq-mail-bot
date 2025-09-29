@@ -1,4 +1,5 @@
 import os
+import json
 import hashlib
 import logging
 from datetime import datetime, timezone
@@ -12,9 +13,11 @@ from firebase_admin import credentials, firestore
 TOKEN = os.environ['TELEGRAM_TOKEN']
 GOOGLE_CLIENT_ID = os.environ['GOOGLE_CLIENT_ID']
 GOOGLE_CLIENT_SECRET = os.environ['GOOGLE_CLIENT_SECRET']
+FIREBASE_CREDENTIALS = os.environ['FIREBASE_CREDENTIALS']
 
-# Inicializar Firebase desde archivo
-cred = credentials.Certificate('firebase-credentials.json')
+# Inicializar Firebase desde variable de entorno
+firebase_dict = json.loads(FIREBASE_CREDENTIALS)
+cred = credentials.Certificate(firebase_dict)
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
