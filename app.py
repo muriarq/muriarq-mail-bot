@@ -78,7 +78,6 @@ def login(message):
                 bot.reply_to(message, f"❌ Contraseña incorrecta. Intentos: {intentos}/3")
             return
 
-        # Login exitoso
         user_ref.update({
             'ultimo_acceso': datetime.now(timezone.utc),
             'intentos_fallidos': 0
